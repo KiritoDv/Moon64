@@ -221,58 +221,6 @@ void render_generic_char(u8 c) {
 #endif
 }
 
-#ifdef VERSION_EU
-static void alloc_ia4_tex_from_i1(u8 *out, u8 *in, s16 width, s16 height) {
-    u32 size = (u32) width * (u32) height;
-    s32 inPos;
-    s16 outPos = 0;
-    u8 bitMask;
-
-    for (inPos = 0; inPos < (width * height) / 4; inPos++) {
-        bitMask = 0x80;
-        while (bitMask != 0) {
-            out[outPos] = (in[inPos] & bitMask) ? 0xF0 : 0x00;
-            bitMask /= 2;
-            out[outPos] = (in[inPos] & bitMask) ? out[outPos] + 0x0F : out[outPos];
-            bitMask /= 2;
-            outPos++;
-        }
-    }
-}
-
-static u8 *convert_ia4_char(u8 c, u8 *tex, s16 w, s16 h) {
-    return tex;
-}
-
-void render_generic_char_at_pos(s16 xPos, s16 yPos, u8 c) {
-    void **fontLUT;
-    void *packedTexture;
-    void *unpackedTexture;
-
-    fontLUT = segmented_to_virtual(main_font_lut);
-    packedTexture = segmented_to_virtual(fontLUT[c]);
-    unpackedTexture = convert_ia4_char(c, packedTexture, 8, 8);
-
-    gDPPipeSync(gDisplayListHead++);
-    gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_IA, G_IM_SIZ_16b, 1, VIRTUAL_TO_PHYSICAL(unpackedTexture));
-    gSPDisplayList(gDisplayListHead++, dl_ia_text_tex_settings);
-    gSPTextureRectangleFlip(gDisplayListHead++, xPos << 2, (yPos - 16) << 2, (xPos + 8) << 2, yPos << 2,
-                            G_TX_RENDERTILE, 8 << 6, 4 << 6, 1 << 10, 1 << 10);
-}
-
-void render_lowercase_diacritic(s16 *xPos, s16 *yPos, u8 letter, u8 diacritic) {
-    render_generic_char_at_pos(*xPos, *yPos, letter);
-    render_generic_char_at_pos(*xPos, *yPos, diacritic + 0xE7);
-    *xPos += gDialogCharWidths[letter];
-}
-
-void render_uppercase_diacritic(s16 *xPos, s16 *yPos, u8 letter, u8 diacritic) {
-    render_generic_char_at_pos(*xPos, *yPos, letter);
-    render_generic_char_at_pos(*xPos, *yPos - 4, diacritic + 0xE3);
-    *xPos += gDialogCharWidths[letter];
-}
-#endif // VERSION_EU
-
 /*
  * Place the multi-text string according to the ID passed. (US, EU)
  * 0: 'the'
@@ -787,36 +735,6 @@ void change_and_flash_dialog_text_color_lines(s8 colorMode, s8 lineNum) {
         }
     }
 }
-
-#ifdef VERSION_EU
-void render_generic_dialog_char_at_pos(struct DialogEntry *dialog, s16 x, s16 y, u8 c) {
-    s16 width;
-    s16 height;
-    s16 tmpX;
-    s16 tmpY;
-    s16 xCoord;
-    s16 yCoord;
-    void **fontLUT;
-    void *packedTexture;
-    void *unpackedTexture;
-
-    width = (8.0 - (gDialogBoxScale * 0.8));
-    height = (16.0 - (gDialogBoxScale * 0.8));
-    tmpX = (dialog->leftOffset + (65.0 - (65.0 / gDialogBoxScale)));
-    tmpY = ((240 - dialog->width) - ((40.0 / gDialogBoxScale) - 40));
-    xCoord = (tmpX + (x / gDialogBoxScale));
-    yCoord = (tmpY + (y / gDialogBoxScale));
-
-    fontLUT = segmented_to_virtual(main_font_lut);
-    packedTexture = segmented_to_virtual(fontLUT[c]);
-    unpackedTexture = convert_ia4_char(c, packedTexture, 8, 8);
-
-    gDPSetTextureImage(gDisplayListHead++, G_IM_FMT_IA, G_IM_SIZ_16b, 1, VIRTUAL_TO_PHYSICAL(unpackedTexture));
-    gSPDisplayList(gDisplayListHead++, dl_ia_text_tex_settings);
-    gSPTextureRectangleFlip(gDisplayListHead++, xCoord << 2, (yCoord - height) << 2,
-                            (xCoord + width) << 2, yCoord << 2, G_TX_RENDERTILE, 8 << 6, 4 << 6, 1 << 10, 1 << 10);
-}
-#endif
 
 #if defined(VERSION_JP) || defined(VERSION_SH)
 #define X_VAL3 5.0f

@@ -41,6 +41,8 @@ void moon_draw_colored_text(f32 x, f32 y, const u8 *str, float scale, struct Col
     }
 }
 
+
+
 void moon_draw_text(f32 x, f32 y, const u8 *str, float scale) {
     UNUSED s8 mark = DIALOG_MARK_NONE;
     s32 strPos = 0;

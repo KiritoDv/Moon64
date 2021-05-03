@@ -181,10 +181,7 @@ ALIGNED8 static const u8 texture_font_char_us_button_C_up            [] = "textu
 ALIGNED8 static const u8 texture_font_char_us_button_C_down          [] = "textures/segment2/font_graphics.06F40.ia4";
 ALIGNED8 static const u8 texture_font_char_us_button_C_left          [] = "textures/segment2/font_graphics.06F80.ia4";
 ALIGNED8 static const u8 texture_font_char_us_button_C_right         [] = "textures/segment2/font_graphics.06FC0.ia4";
-
-// Small Font - Custom Characters
 ALIGNED8 static const u8 texture_font_char_cust_inverted_exclamation [] = "textures/special/character_00A1.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_inverted_question    [] = "textures/special/character_00BF.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_A_grave              [] = "textures/special/character_00C0.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_A_acute              [] = "textures/special/character_00C1.ia4";
@@ -209,7 +206,6 @@ ALIGNED8 static const u8 texture_font_char_cust_O_acute              [] = "textu
 ALIGNED8 static const u8 texture_font_char_cust_O_circumflex         [] = "textures/special/character_00D4.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_O_tilde              [] = "textures/special/character_00D5.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_O_diaeresis          [] = "textures/special/character_00D6.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_O_stroke             [] = "textures/special/character_00D8.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_U_grave              [] = "textures/special/character_00D9.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_U_acute              [] = "textures/special/character_00DA.ia4";
@@ -241,7 +237,6 @@ ALIGNED8 static const u8 texture_font_char_cust_o_acute              [] = "textu
 ALIGNED8 static const u8 texture_font_char_cust_o_circumflex         [] = "textures/special/character_00F4.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_o_tilde              [] = "textures/special/character_00F5.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_o_diaeresis          [] = "textures/special/character_00F6.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_o_stroke             [] = "textures/special/character_00F8.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_u_grave              [] = "textures/special/character_00F9.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_u_acute              [] = "textures/special/character_00FA.ia4";
@@ -250,41 +245,31 @@ ALIGNED8 static const u8 texture_font_char_cust_u_diaeresis          [] = "textu
 ALIGNED8 static const u8 texture_font_char_cust_y_acute              [] = "textures/special/character_00FD.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_thorn                [] = "textures/special/character_00FE.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_y_diaeresis          [] = "textures/special/character_00FF.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_A_ogonek             [] = "textures/special/character_0104.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_a_ogonek             [] = "textures/special/character_0105.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_C_acute              [] = "textures/special/character_0106.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_c_acute              [] = "textures/special/character_0107.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_E_ogonek             [] = "textures/special/character_0118.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_e_ogonek             [] = "textures/special/character_0119.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_G_breve              [] = "textures/special/character_011E.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_g_breve              [] = "textures/special/character_011F.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_S_cedilla            [] = "textures/special/character_0130.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_s_cedilla            [] = "textures/special/character_0131.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_L_stroke             [] = "textures/special/character_0141.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_l_stroke             [] = "textures/special/character_0142.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_N_acute              [] = "textures/special/character_0143.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_n_acute              [] = "textures/special/character_0144.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_OE                   [] = "textures/special/character_0152.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_oe                   [] = "textures/special/character_0153.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_S_acute              [] = "textures/special/character_015A.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_s_acute              [] = "textures/special/character_015B.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_i_dot                [] = "textures/special/character_015E.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_i_dotless            [] = "textures/special/character_015F.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_Y_diaeresis          [] = "textures/special/character_0178.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_Z_acute              [] = "textures/special/character_0179.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_z_acute              [] = "textures/special/character_017A.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_Z_dot                [] = "textures/special/character_017B.ia4";
 ALIGNED8 static const u8 texture_font_char_cust_z_dot                [] = "textures/special/character_017C.ia4";
-//
 ALIGNED8 static const u8 texture_font_char_cust_eszett               [] = "textures/special/character_1E9E.ia4";
 
 // Main HUD print table 0x02008250-0x02008337
