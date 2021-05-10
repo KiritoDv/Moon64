@@ -1,43 +1,35 @@
 #include "engine.h"
-#include <iostream>
-#include <string>
-#include <unistd.h>
-#include <stdio.h>
-#include <limits.h>
-#include <stdlib.h>
-#include <dirent.h>
 
 #include "moon/utils/moon-env.h"
-#include "moon/mod-engine/interfaces/mod-module.h"
-#include "moon/mod-engine/modules/test-module.h"
 #include "interfaces/file-entry.h"
 #include "textures/mod-texture.h"
-#include "moon/libs/miniz/zip_file.hpp"
+
+#include "moon/zip/straw.h"
 #include "moon/libs/nlohmann/json.hpp"
 using json = nlohmann::json;
-
-
 using namespace std;
 
+#include <iostream>
+#include <string>
+#include <limits.h>
+#include <dirent.h>
+
 extern "C" {
-#include "moon/moon64.h"
-#include "moon/libs/lua/lualib.h"
-#include "moon/libs/lua/lauxlib.h"
-#include "moon/libs/lua/lua.h"
 #include "text/libs/io_utils.h"
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
 }
 
 namespace Moon {
+
     vector<BitModule*> addons;
 
     void loadAddon(string addonPath){
-        miniz_cpp::zip_file file(addonPath);
+        StrawFile file(addonPath);
 
         cout << "Loading addon: " << addonPath << endl;
 
-        if(file.has_file("properties.json")){
+        if(file.exists("properties.json")){
             string tjson = file.read("properties.json");
 
             json j = json::parse(tjson);
@@ -53,19 +45,19 @@ namespace Moon {
                 bit->path        = addonPath;
                 bit->readOnly    = false;
 
-                if(file.has_file(bit->main)){
+                if(file.exists(bit->main)){
                     std::cout << file.read(bit->main) << std::endl;
                 }
 
-                if(file.has_file(bit->icon)){
+                if(file.exists(bit->icon)){
                     vector<string> allowedTextures = {"png", "jpg", "jpeg"};
                     if(std::count(allowedTextures.begin(), allowedTextures.end(), string(get_filename_ext(bit->icon.c_str())))){
                         Moon::saveAddonTexture(bit, "mod-icons://"+bit->name, new TextureFileEntry({.path = bit->icon}));
                     }
                 }
 
-                if(file.has_file("assets/")){
-                    for(auto &name : file.namelist()){
+                if(file.exists("assets/")){
+                    for(auto &name : file.entries()){
                         string graphicsPath = "assets/graphics/";
                         string textsPath = "assets/texts/";
 
@@ -76,7 +68,7 @@ namespace Moon {
                                 string rawname = texName.substr(0, texName.find_last_of("."));
 
                                 TextureFileEntry *entry = new TextureFileEntry();
-                                file.read_texture(name, &entry);
+                                file.read(name, entry);
                                 Moon::saveAddonTexture(bit, rawname, entry);
                             }
                         }
@@ -91,12 +83,14 @@ namespace Moon {
                 addons.push_back(bit);
             }
         } else {
-            std::cout << "Failed to load addon: [" << file.get_filename() << "]" << std::endl;
+            std::cout << "Failed to load addon: [" << file.getPath() << "]" << std::endl;
             std::cout << "Missing properties.json" << std::endl;
         }
     }
+}
 
-    void scanAddonsDirectory() {
+namespace MoonInternal {
+     void scanAddonsDirectory() {
         string cwd = MoonInternal::getEnvironmentVar("MOON_CWD");
         string addonsDir = cwd.substr(0, cwd.find_last_of("/\\")) + "/addons/";
 
@@ -107,7 +101,7 @@ namespace Moon {
                 string extension = string(get_filename_ext(de->d_name));
                 if (extension.compare("bit") == 0) {
                     string file = addonsDir + de->d_name;
-                    loadAddon(file);
+                    Moon::loadAddon(file);
                 }
             }
             closedir(dir);
@@ -120,10 +114,10 @@ namespace Moon {
             return;
         }
         if(state == "Init"){
-            Moon::loadAddon("/home/alex/Music/Moon64-Packs/converted/beta-hud.bit");
-            Moon::loadAddon("/home/alex/disks/uwu/Projects/UnderVolt/Moon64-Packs/converted/owo.bit");
-            Moon::loadAddon("/home/alex/Music/Moon64-Packs/converted/minecraft.bit");
-            MoonInternal::buildTextureCache();
+            MoonInternal::scanAddonsDirectory();
+            vector<int> order;
+            for(int i = 0; i < Moon::addons.size(); i++) order.push_back(i);
+            MoonInternal::buildTextureCache(order);
             return;
         }
     }

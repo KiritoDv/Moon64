@@ -1,6 +1,6 @@
 #include "mod-texture.h"
 
-#include "moon/wrapper.h"
+#include "moon/zip/straw.h"
 #include "moon/libs/nlohmann/json.hpp"
 #include "moon/mod-engine/engine.h"
 #include "assets/missing.h"
@@ -16,6 +16,8 @@ extern "C" {
 }
 
 #include <iostream>
+#include <vector>
+#include <map>
 
 using namespace std;
 using json = nlohmann::json;
@@ -66,9 +68,9 @@ namespace MoonInternal {
             if(fileEntry != NULL){
                 if(fileEntry->data != NULL) data = fileEntry;
                 else if(!fileEntry->path.empty()){
-                    miniz_cpp::zip_file file(addon->path);
+                    StrawFile file(addon->path);
                     TextureFileEntry *newData = new TextureFileEntry();
-                    file.read_texture(fileEntry->path, &newData);
+                    file.read(fileEntry->path, newData);
                     data = newData;
                 }
             }
@@ -103,10 +105,11 @@ namespace MoonInternal {
         textureMap.insert(pair<string, TextureData*>(texturePath, data));
     }
 
-    void buildTextureCache(){
+    void buildTextureCache(vector<int> order){
         textureCache.clear();
 
-        for(auto &addon : Moon::addons){
+        for(int i=0; i < order.size(); i++){
+            BitModule *addon = Moon::addons[order[i]];
 
             for (map<string, TextureFileEntry*>::iterator entry = addon->textures.begin(); entry != addon->textures.end(); ++entry) {
                 auto texIt = textureCache.find(entry->first);
