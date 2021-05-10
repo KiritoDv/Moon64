@@ -12,6 +12,7 @@
 #include "moon/mod-engine/modules/test-module.h"
 #include "interfaces/file-entry.h"
 #include "textures/mod-texture.h"
+#include "moon/libs/miniz/zip_file.hpp"
 #include "moon/libs/nlohmann/json.hpp"
 using json = nlohmann::json;
 
@@ -26,45 +27,17 @@ extern "C" {
 #include "text/libs/io_utils.h"
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
-#include "moon/libs/miniz/miniz.h"
 }
 
 namespace Moon {
     vector<BitModule*> addons;
 
     void loadAddon(string addonPath){
-        mz_zip_archive zip;
-        mz_bool status;
+        miniz_cpp::zip_file file(addonPath);
 
-        memset(&zip, 0, sizeof(zip));
-
-        mz_zip_reader_init_file(&zip, addonPath.c_str(), 0);
         cout << "Loading addon: " << addonPath << endl;
 
-        if(!status){
-            cout << "Failed to read addon: " << addonPath << endl;
-            return;
-        }
-
-        mz_zip_archive_file_stat file_stat;
-        if (!mz_zip_reader_file_stat(&zip, 0, &file_stat)) {
-            cout << "Addon file read error" << endl;
-            mz_zip_reader_end(&zip);
-            return;
-        }
-
-        int file_index = mz_zip_reader_locate_file(&zip, "properties.json", NULL, MZ_ZIP_FLAG_IGNORE_PATH);
-
-        size_t uncompressed_size = file_stat.m_uncomp_size;
-        void* p = mz_zip_reader_extract_file_to_heap(&zip, file_stat.m_filename, &uncompressed_size, 0);
-        if (!p)
-        {
-            cout << "mz_zip_reader_extract_file_to_heap() failed..." << endl;
-            mz_zip_reader_end(&zip_archive);
-            return;
-        }
-
-        if(file.has_file()){
+        if(file.has_file("properties.json")){
             string tjson = file.read("properties.json");
 
             json j = json::parse(tjson);

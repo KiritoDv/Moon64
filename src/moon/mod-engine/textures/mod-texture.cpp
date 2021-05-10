@@ -1,6 +1,6 @@
 #include "mod-texture.h"
 
-#include "moon/libs/miniz/miniz.h"
+#include "moon/wrapper.h"
 #include "moon/libs/nlohmann/json.hpp"
 #include "moon/mod-engine/engine.h"
 #include "assets/missing.h"
@@ -14,6 +14,8 @@ extern "C" {
 #include "pc/platform.h"
 #include "pc/fs/fs.h"
 }
+
+#include <iostream>
 
 using namespace std;
 using json = nlohmann::json;
