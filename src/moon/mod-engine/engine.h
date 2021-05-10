@@ -8,7 +8,10 @@ extern "C" {
 #include "pc/gfx/gfx_pc.h"
 }
 
-extern std::vector<BitModule*> addons;
+namespace Moon {
+    extern std::vector<BitModule*> addons;
+    void loadAddon(std::string addonPath);
+}
 
 void Moon_SaveTexture(TextureData* data, std::string tex);
 TextureData* Moon_GetTexture(std::string texture);

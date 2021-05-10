@@ -1,5 +1,6 @@
 #ifndef MOON_WRAPPER
 #define MOON_WRAPPER
+
 #ifndef __cplusplus
 
 #include "types.h"
