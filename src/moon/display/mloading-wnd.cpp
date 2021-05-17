@@ -156,13 +156,13 @@ namespace MoonWindow {
             return;
         }
         if(status == "PostInit"){
+            isWndRunning = false;
             MoonWindow::updateMessage("Finishing loading");
             sleep(2);
-            SDL_DestroyRenderer(renderer);
-            SDL_DestroyWindow(wnd);
+            SDL_HideWindow(wnd);
         }
         if(status == "Exit"){
-            isWndRunning = false;
+            SDL_DestroyWindow(wnd);
         }
     }
 }
