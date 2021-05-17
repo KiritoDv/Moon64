@@ -290,6 +290,9 @@ SRC_DIRS += src/moon/mod-engine/textures src/moon/mod-engine/textures/assets src
 # Moon64 SRC [Mod-Engine - Hook Module]
 SRC_DIRS += src/moon/mod-engine/hooks
 
+# Moon64 SRC [Loading Window]
+SRC_DIRS += src/moon/display
+
 # Moon64 LIB [RapidJSON]
 SRC_DIRS += src/moon/libs/rapidjson src/moon/libs/rapidjson/error src/moon/libs/rapidjson/internal src/moon/libs/rapidjson/msinttypes
 
@@ -651,7 +654,7 @@ else ifeq ($(TARGET_SWITCH),1)
   LDFLAGS := -specs=$(LIBNX)/switch.specs $(NXARCH) $(OPT_FLAGS) -no-pie -L$(LIBNX)/lib $(BACKEND_LDFLAGS) -lnx -lm `curl-config --libs`
 
 else
-  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -no-pie -lpthread -lcurl
+  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -lm $(BACKEND_LDFLAGS) -no-pie -lpthread -lcurl -lSDL2_ttf -lSDL2_image
   ifeq ($(DISCORDRPC),1)
     LDFLAGS += -ldl -Wl,-rpath .
   endif

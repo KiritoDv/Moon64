@@ -191,6 +191,7 @@ void main_func(char *argv[]) {
     static u64 pool[0x165000/8 / 4 * sizeof(void *)];
     main_pool_init(pool, pool + sizeof(pool) / sizeof(pool[0]));
     gEffectsMemoryPool = mem_pool_init(0x4000, MEMORY_POOL_LEFT);
+    moon_setup("PreStartup");
 
     const char *gamedir = gCLIOpts.GameDir[0] ? gCLIOpts.GameDir : FS_BASEDIR;
     const char *userpath = gCLIOpts.SavePath[0] ? gCLIOpts.SavePath : sys_user_path();
@@ -258,6 +259,7 @@ void main_func(char *argv[]) {
     gfx_precache_textures();
     moon_setup("PreInit");
     moon_setup("Init");
+    moon_setup("PostInit");
 
 #ifdef DISCORDRPC
     discord_init();

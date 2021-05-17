@@ -13,6 +13,8 @@ using namespace std;
 #include <string>
 #include <limits.h>
 #include <dirent.h>
+#include <thread>
+#include <future>
 
 extern "C" {
 #include "text/libs/io_utils.h"
@@ -20,16 +22,17 @@ extern "C" {
 #include "pc/fs/fs.h"
 }
 
+#include "moon/display/mloading-wnd.h"
+
 namespace Moon {
 
     vector<BitModule*> addons;
 
     void loadAddon(string addonPath){
+        MoonWindow::updateMessage("Loading addon: " + addonPath.substr(addonPath.find_last_of("/\\") + 1));
+
         StrawFile file(addonPath);
         file.open();
-
-        cout << "Loading addon: " << addonPath << endl;
-
         if(file.exists("properties.json")){
             string tjson = file.read("properties.json");
 
@@ -82,13 +85,14 @@ namespace Moon {
                                     string texName = name.substr(path.length());
                                     string rawname = texName.substr(0, texName.find_last_of("."));
 
+                                    MoonWindow::updateMessage(rawname.substr(rawname.find_last_of("/\\") + 1));
                                     TextureFileEntry *entry = new TextureFileEntry();
                                     file.read(name, entry);
                                     Moon::saveAddonTexture(bit, rawname, entry);
                                 }
                                 if(!string(get_filename_ext(name.c_str())).compare("json")){
                                     string modName = name.substr(path.length());
-                                    cout << "Found animated texture " << modName << endl;
+                                    MoonWindow::updateMessage("Found animated texture " + modName);
                                     json mods = json::parse(file.read(name));
                                     for (json::iterator entry = mods.begin(); entry != mods.end(); ++entry) {
                                         Moon::bindTextureModifier(modName.substr(0, modName.find_last_of(".")), entry.key(), entry.value());
@@ -110,31 +114,33 @@ namespace Moon {
             std::cout << "addon: [" << file.getPath() << "]" << std::endl;
             std::cout << "Missing properties.json" << std::endl;
         }
+        MoonWindow::addAddonCounter();
     }
 }
 
 namespace MoonInternal {
-     void scanAddonsDirectory() {
+    void scanAddonsDirectory() {
         string cwd = MoonInternal::getEnvironmentVar("MOON_CWD");
         string addonsDir = cwd.substr(0, cwd.find_last_of("/\\")) + "/addons/";
-
+        vector<string> foundAddons;
         DIR *dir = opendir(addonsDir.c_str());
         if (dir) {
             struct dirent *de;
             while ((de = readdir(dir)) != NULL) {
                 string extension = string(get_filename_ext(de->d_name));
-                if (extension.compare("bit") == 0) {
-                    string file = addonsDir + de->d_name;
-                    Moon::loadAddon(file);
-                }
+                if (!extension.compare("bit"))
+                    foundAddons.push_back(addonsDir + de->d_name);
             }
             closedir(dir);
         }
+        MoonWindow::setMaxAddons(foundAddons.size());
+        for(auto &path : foundAddons)
+            Moon::loadAddon(path);
     }
 
     void setupModEngine( string state ){
         MoonInternal::setupTextureEngine(state);
-
+        MoonWindow::setupLoadingWindow(state);
         if(state == "Init"){
             MoonInternal::scanAddonsDirectory();
             vector<int> order;

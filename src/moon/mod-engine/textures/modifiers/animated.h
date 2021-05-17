@@ -29,4 +29,6 @@ public:
    std::string getKey();
 };
 
+long long getMilliseconds();
+
 #endif
