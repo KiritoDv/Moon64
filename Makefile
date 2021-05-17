@@ -636,7 +636,7 @@ ifeq ($(TARGET_WEB),1)
 LDFLAGS := -lm -lGL -lSDL2 -no-pie -s TOTAL_MEMORY=20MB -g4 --source-map-base http://localhost:8080/ -s "EXTRA_EXPORTED_RUNTIME_METHODS=['callMain']"
 
 else ifeq ($(WINDOWS_BUILD),1)
-  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static
+  LDFLAGS := $(BITS) -march=$(TARGET_ARCH) -Llib -lpthread $(BACKEND_LDFLAGS) -static -lSDL2_image
   ifeq ($(CROSS),)
     LDFLAGS += -no-pie
   endif
