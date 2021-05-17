@@ -10,9 +10,7 @@
 #include <string>
 
 #include <SDL2/SDL.h>
-#ifndef _WIN32
 #include <SDL2/SDL_ttf.h>
-#endif
 #include <SDL2/SDL_image.h>
 
 #include "umath.h"
@@ -21,9 +19,7 @@ using namespace std;
 bool isWndRunning = false;
 SDL_Window *wnd;
 SDL_Renderer *renderer;
-#ifndef _WIN32
 TTF_Font* font;
-#endif
 
 SDL_Texture* background;
 SDL_Texture* logo;
@@ -46,7 +42,7 @@ namespace MoonWindow {
         SDL_Init(SDL_INIT_EVERYTHING);
     #ifndef _WIN32
         TTF_Init();
-        font = TTF_OpenFont("/home/alex/disks/uwu/Projects/UnderVolt/Moon64/scientificaBold.ttf", 18);
+        font = TTF_OpenFont("scientificaBold.ttf", 18);
         if( font == NULL ) {
             cout << TTF_GetError() << endl;
         }
@@ -108,17 +104,16 @@ namespace MoonWindow {
         // Draw Logo
         SDL_FRect logoRect = {.x = 0, .y = 20 - yLogo, .w = 256, .h = 256};
         SDL_RenderCopyF(renderer, logo, NULL, &logoRect);
-    #ifndef _WIN32
         // Draw text
         SDL_Surface *message = TTF_RenderText_Solid(font, textMessage.c_str(), {255, 255, 255});
         SDL_Texture *msg = SDL_CreateTextureFromSurface(renderer, message);
         SDL_Rect textRect = {.x = (WND_WIDTH / 2) - (message->w / 2), .y = WND_HEIGHT - 15 - message->h, .w = message->w, .h = message->h};
-        SDL_RenderCopy(renderer, msg, NULL, new SDL_Rect());
-        SDL_FreeSurface(message);
+        SDL_RenderCopy(renderer, msg, NULL, &textRect);
         SDL_DestroyTexture(msg);
-    #endif
+        SDL_FreeSurface(message);
         // Draw progress bar
         SDL_SetRenderDrawColor(renderer, 255, 239, 97, 255);
+        cout << loadedAddons  << " - " << maxAddons << endl;
         SDL_FRect pbRect = {.x = 0, .y = WND_HEIGHT - 5, .w = WND_WIDTH * (loadedAddons / (float) maxAddons), .h = 5};
         SDL_RenderFillRectF(renderer, &pbRect);
 
