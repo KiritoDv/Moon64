@@ -40,13 +40,11 @@ namespace MoonWindow {
     void setupWindow(){
         isWndRunning = true;
         SDL_Init(SDL_INIT_EVERYTHING);
-    #ifndef _WIN32
         TTF_Init();
         font = TTF_OpenFont("scientificaBold.ttf", 18);
         if( font == NULL ) {
             cout << TTF_GetError() << endl;
         }
-    #endif
         wnd = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 256, 256, SDL_WINDOW_BORDERLESS);
         if(!wnd){
             SDL_DestroyWindow(wnd);
