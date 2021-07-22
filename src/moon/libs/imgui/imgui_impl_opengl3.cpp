@@ -108,7 +108,6 @@
 # include <SDL2/SDL_opengl.h>
 #endif
 
-
 // Desktop GL 3.2+ has glDrawElementsBaseVertex() which GL ES and WebGL don't have.
 #if !defined(IMGUI_IMPL_OPENGL_ES2) && !defined(IMGUI_IMPL_OPENGL_ES3) && defined(GL_VERSION_3_2)
 #define IMGUI_IMPL_OPENGL_MAY_HAVE_VTX_OFFSET

@@ -41,8 +41,8 @@ SDL_Window* window = nullptr;
 ImGuiIO io;
 
 namespace MoonInternal {
-
     void setupImGuiModule(string status) {
+        return;
         if(status == "PreStartup"){
             Moon::registerHookListener({.hookName = WINDOW_API_INIT, .callback = [](HookCall call){
                 const char* glsl_version = "#version 120";
@@ -74,20 +74,19 @@ namespace MoonInternal {
                 }
             }});
 
-            Moon::registerHookListener({ GFX_POST_END_FRAME, [](HookCall call){
+            Moon::registerHookListener({ GFX_PRE_END_FRAME, [](HookCall call){
                 ImGui_ImplOpenGL3_NewFrame();
                 ImGui_ImplSDL2_NewFrame(window);
                 ImGui::NewFrame();
 
-                static float f = 0.0f;
-                static int counter = 0;
-
                 if(showWindow){
-                    ImGui::Begin("Moon64 Game Stats");
+                    ImGui::PushStyleColor(ImGuiCol_Border,   ImVec4(0, 0, 0, 0));
+                    ImGui::Begin("Moon64 Game Stats", NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
                     ImGui::Text("Framerate: %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
                     ImGui::Text("Branch: " GIT_BRANCH);
                     ImGui::Text("Commit: " GIT_HASH);
                     ImGui::End();
+                    ImGui::PopStyleColor();
                 }
 
                 ImGui::Render();

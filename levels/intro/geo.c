@@ -82,6 +82,7 @@ const GeoLayout intro_geo_00035C[] = {
          GEO_NODE_ORTHO(100),
          GEO_OPEN_NODE(),
             GEO_ASM(0, geo_intro_backdrop),
+            GEO_ASM(0, geo_intro_face_easter_egg),
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),
       GEO_ZBUFFER(1),
@@ -90,6 +91,10 @@ const GeoLayout intro_geo_00035C[] = {
          GEO_OPEN_NODE(),
             GEO_ASM(2, geo_draw_mario_head_goddard),
          GEO_CLOSE_NODE(),
+      GEO_CLOSE_NODE(),
+      GEO_ZBUFFER(0),
+      GEO_OPEN_NODE(),
+         GEO_ASM(0, geo_intro_rumble_pak_graphic),
       GEO_CLOSE_NODE(),
    GEO_CLOSE_NODE(),
    GEO_END(),
@@ -150,4 +155,3 @@ const GeoLayout intro_geo_000414[] = {
    GEO_CLOSE_NODE(),
    GEO_END(),
 };
-

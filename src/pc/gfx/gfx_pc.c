@@ -71,7 +71,7 @@ struct ColorCombiner {
 static struct ColorCombiner color_combiner_pool[64];
 static uint8_t color_combiner_pool_size;
 
-static struct RSP {
+	static struct RSP {
     float modelview_matrix_stack[11][4][4];
     uint8_t modelview_matrix_stack_size;
 
@@ -93,6 +93,10 @@ static struct RSP {
     } texture_scaling_factor;
 
     struct LoadedVertex loaded_vertices[MAX_VERTICES + 4];
+    uint8_t saved_opcode;
+    uint8_t saved_tile;
+    uint16_t saved_uls, saved_ult;
+    int32_t saved_lrx, saved_lry, saved_ulx, saved_uly;
 } rsp;
 
 static struct RDP {
@@ -146,15 +150,8 @@ static size_t buf_vbo_num_tris;
 static struct GfxWindowManagerAPI *gfx_wapi;
 static struct GfxRenderingAPI *gfx_rapi;
 
-// 4x4 pink-black checkerboard texture to indicate missing textures
-#define MISSING_W 4
-#define MISSING_H 4
-static const uint8_t missing_texture[MISSING_W * MISSING_H * 4] = {
-    0xFF, 0x00, 0xFF, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0xFF,  0x00, 0x00, 0x00, 0xFF,
-    0xFF, 0x00, 0xFF, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,  0x00, 0x00, 0x00, 0xFF,  0x00, 0x00, 0x00, 0xFF,
-    0x00, 0x00, 0x00, 0xFF,  0x00, 0x00, 0x00, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,
-    0x00, 0x00, 0x00, 0xFF,  0x00, 0x00, 0x00, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,  0xFF, 0x00, 0xFF, 0xFF,
-};
+static uint16_t *framebuffer_data;
+static bool requested_framebuffer;
 
 static inline size_t string_hash(const uint8_t *str) {
     size_t h = 0;
@@ -255,8 +252,22 @@ static struct ColorCombiner *gfx_lookup_or_create_color_combiner(uint32_t cc_id)
     return prev_combiner = comb;
 }
 
+#include "menu/intro_geo.h"
+
 static bool gfx_texture_cache_lookup(int tile, struct TextureData **n, const uint8_t *orig_addr, uint32_t fmt, uint32_t siz) {
-    struct TextureData *node = moon_get_texture(orig_addr);
+
+    char* hash = orig_addr;
+    struct TextureData *node = moon_get_texture(hash);
+
+    if(!strcmp(orig_addr, "levels/intro/2_copyright.rgba16")){
+        orig_addr = intro_sample_frame_buffer(64, 32, 2, 2);
+        node = NULL;
+    }
+
+    if(fmt == G_IM_FMT_FRAMEBUFFER){
+        node = NULL;
+    }
+
 
     if(node != NULL){
         gfx_rapi->select_texture(tile, node->texture_id);
@@ -275,24 +286,9 @@ static bool gfx_texture_cache_lookup(int tile, struct TextureData **n, const uin
     node->texture_addr = orig_addr;
     node->fmt = fmt;
     node->siz = siz;
-    moon_save_texture(node, orig_addr);
+    moon_save_texture(node, hash);
     if(n != NULL) *n = node;
     return false;
-}
-
-static inline void load_memory_texture(void *imgdata, long size) {
-    int w, h;
-
-    if (imgdata) {
-        u8 *data = stbi_load_from_memory(imgdata, size, &w, &h, NULL, 4);
-        if (data) {
-            gfx_rapi->upload_texture(data, w, h);
-            // stbi_image_free(data); // don't need this anymore
-            return;
-        }
-    }
-
-    gfx_rapi->upload_texture(missing_texture, MISSING_W, MISSING_H);
 }
 
 struct TextureData * forceTextureLoad(char* path) {
@@ -310,6 +306,8 @@ struct TextureData * forceTextureLoad(char* path) {
     return node;
 }
 
+static uint8_t rgba32_buf[32768] __attribute__((aligned(32)));
+
 static void import_texture(int tile) {
     uint8_t fmt = rdp.texture_tile.fmt;
     uint8_t siz = rdp.texture_tile.siz;
@@ -323,9 +321,29 @@ static void import_texture(int tile) {
 
     // the "texture data" is actually a C string with the path to our texture in it
     // load it from an external image in our data path
-    char texname[SYS_MAX_PATH];
-    snprintf(texname, sizeof(texname), FS_TEXTUREDIR "/%s.png", (const char*)rdp.loaded_texture[tile].addr);
-    moon_load_texture(tile, texname, gfx_rapi);
+
+    if(fmt == G_IM_FMT_FRAMEBUFFER){
+        for (uint32_t i = 0; i < rdp.loaded_texture[tile].size_bytes / 2; i++) {
+            uint16_t col16 = (rdp.loaded_texture[tile].addr[2 * i] << 8) | rdp.loaded_texture[tile].addr[2 * i + 1];
+            uint8_t a = col16 & 1;
+            uint8_t r = col16 >> 11;
+            uint8_t g = (col16 >> 6) & 0x1f;
+            uint8_t b = (col16 >> 1) & 0x1f;
+            rgba32_buf[4 * i + 0] = SCALE_5_8(r);
+            rgba32_buf[4 * i + 1] = SCALE_5_8(g);
+            rgba32_buf[4 * i + 2] = SCALE_5_8(b);
+            rgba32_buf[4 * i + 3] = a ? 255 : 0;
+        }
+
+        uint32_t width = rdp.texture_tile.line_size_bytes / 2;
+        uint32_t height = rdp.loaded_texture[tile].size_bytes / rdp.texture_tile.line_size_bytes;
+
+        gfx_rapi->upload_texture(rgba32_buf, width, height);
+    } else {
+        char texname[SYS_MAX_PATH];
+        snprintf(texname, sizeof(texname), FS_TEXTUREDIR "/%s.png", (const char*)rdp.loaded_texture[tile].addr);
+        moon_load_texture(tile, texname, gfx_rapi);
+    }
 }
 
 static void gfx_normalize_vector(float v[3]) {
@@ -403,9 +421,9 @@ static void gfx_sp_matrix(uint8_t parameters, const int32_t *addr) {
 
 static void gfx_sp_pop_matrix(uint32_t count) {
     while (count--) {
-        if (rsp.modelview_matrix_stack_size > 0) {
+        if (rsp.modelview_matrix_stack_size > 1) {
             --rsp.modelview_matrix_stack_size;
-            if (rsp.modelview_matrix_stack_size > 0) {
+            if (rsp.modelview_matrix_stack_size > 1) {
                 gfx_matrix_mul(rsp.MP_matrix, rsp.modelview_matrix_stack[rsp.modelview_matrix_stack_size - 1], rsp.P_matrix);
             }
         }
@@ -444,9 +462,11 @@ static void gfx_sp_vertex(size_t n_vertices, size_t dest_index, const Vtx *verti
                 rsp.lights_changed = false;
             }
 
-            int r = rsp.current_lights[rsp.current_num_lights - 1].col[0];
-            int g = rsp.current_lights[rsp.current_num_lights - 1].col[1];
-            int b = rsp.current_lights[rsp.current_num_lights - 1].col[2];
+            const bool useFirstColor = (dest_index & 1) == 0;
+            const unsigned char* col = useFirstColor ? rsp.current_lights[rsp.current_num_lights - 1].col : rsp.current_lights[rsp.current_num_lights - 1].colc;
+            int r = col[0];
+            int g = col[1];
+            int b = col[2];
 
             for (int i = 0; i < rsp.current_num_lights - 1; i++) {
                 float intensity = 0;
@@ -455,9 +475,10 @@ static void gfx_sp_vertex(size_t n_vertices, size_t dest_index, const Vtx *verti
                 intensity += vn->n[2] * rsp.current_lights_coeffs[i][2];
                 intensity /= 127.0f;
                 if (intensity > 0.0f) {
-                    r += intensity * rsp.current_lights[i].col[0];
-                    g += intensity * rsp.current_lights[i].col[1];
-                    b += intensity * rsp.current_lights[i].col[2];
+                    col = useFirstColor ? rsp.current_lights[i].col : rsp.current_lights[i].colc;
+                    r += intensity * col[0];
+                    g += intensity * col[1];
+                    b += intensity * col[2];
                 }
             }
 
@@ -733,7 +754,7 @@ static void gfx_sp_tri1(uint8_t vtx1_idx, uint8_t vtx2_idx, uint8_t vtx3_idx) {
         buf_vbo[buf_vbo_len++] = color->b / 255.0f;
         buf_vbo[buf_vbo_len++] = color->a / 255.0f;*/
     }
-    if (++buf_vbo_num_tris == MAX_BUFFERED) {
+    if (++buf_vbo_num_tris == MAX_BUFFERED_TRIANGLES) {
         gfx_flush();
     }
 }
@@ -1398,11 +1419,27 @@ void gfx_get_dimensions(uint32_t *width, uint32_t *height) {
     gfx_wapi->get_dimensions(width, height);
 }
 
+void gfx_update_dimensions() {
+    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
+
+    if (gfx_current_dimensions.height == 0) {
+        gfx_current_dimensions.height = 1;
+    }
+
+    gfx_current_dimensions.aspect_ratio = (float) gfx_current_dimensions.width / (float) gfx_current_dimensions.height;
+}
+
 void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, const char *window_title) {
     gfx_wapi = wapi;
-    gfx_rapi = rapi;
     gfx_wapi->init(window_title);
+
+    gfx_update_dimensions();
+
+    gfx_rapi = rapi;
     gfx_rapi->init();
+
+    framebuffer_data = NULL;
+    requested_framebuffer = false;
 
     // Used in the 120 star TAS
     static uint32_t precomp_shaders[] = {
@@ -1431,7 +1468,9 @@ void gfx_init(struct GfxWindowManagerAPI *wapi, struct GfxRenderingAPI *rapi, co
         0x03200200,
         0x09200200,
         0x0920038d,
-        0x09200045
+        0x09200045,
+        // Not used in the 120 star TAS, but discovered through testing
+        0x09200a00
     };
 
     for (size_t i = 0; i < sizeof(precomp_shaders) / sizeof(uint32_t); i++)
@@ -1442,14 +1481,22 @@ struct GfxRenderingAPI *gfx_get_current_rendering_api(void) {
     return gfx_rapi;
 }
 
+uint16_t *get_framebuffer() {
+    if (!requested_framebuffer) {
+        if (framebuffer_data == NULL) {
+            framebuffer_data = (uint16_t *) malloc(FRAMEBUFFER_WIDTH * FRAMEBUFFER_HEIGHT * sizeof(uint16_t));
+        }
+
+        gfx_get_current_rendering_api()->get_framebuffer(framebuffer_data);
+        requested_framebuffer = true;
+    }
+
+    return framebuffer_data;
+}
+
 void gfx_start_frame(void) {
     gfx_wapi->handle_events();
-    gfx_wapi->get_dimensions(&gfx_current_dimensions.width, &gfx_current_dimensions.height);
-    if (gfx_current_dimensions.height == 0) {
-        // Avoid division by zero
-        gfx_current_dimensions.height = 1;
-    }
-    gfx_current_dimensions.aspect_ratio = (float)gfx_current_dimensions.width / (float)gfx_current_dimensions.height;
+    gfx_update_dimensions();
 }
 
 void gfx_run(Gfx *commands) {
@@ -1477,6 +1524,7 @@ void gfx_end_frame(void) {
     if (!dropped_frame) {
         gfx_rapi->finish_render();
         gfx_wapi->swap_buffers_end();
+        requested_framebuffer = false;
     }
 }
 
@@ -1488,5 +1536,9 @@ void gfx_shutdown(void) {
     if (gfx_wapi) {
         if (gfx_wapi->shutdown) gfx_wapi->shutdown();
         gfx_wapi = NULL;
+    }
+    if (framebuffer_data) {
+        free(framebuffer_data);
+        framebuffer_data = NULL;
     }
 }

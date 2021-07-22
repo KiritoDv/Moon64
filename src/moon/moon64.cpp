@@ -88,6 +88,7 @@ void moon_update_window(void* window){
 */
 
 void moon_save_texture(struct TextureData* data, char* tex){
+    // cout << "Data: " << tex << endl;
     MoonInternal::saveTexture(data, string(tex));
 }
 
